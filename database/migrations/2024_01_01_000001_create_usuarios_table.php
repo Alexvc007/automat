@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('correo')->unique();
             $table->timestamp('correo_verificado_en')->nullable();
             $table->string('contrasena');
-            $table->enum('rol', ['admin', 'trabajador'])->default('trabajador');
+            $table->enum('rol', ['admin', 'trabajador', 'cliente'])->default('cliente');
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->rememberToken();
             $table->timestamps();

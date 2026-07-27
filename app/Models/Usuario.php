@@ -40,8 +40,23 @@ class Usuario extends Authenticatable
         return $this->hasOne(Trabajador::class, 'usuario_id');
     }
 
+    public function cliente()
+    {
+        return $this->hasOne(Cliente::class, 'usuario_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->rol === 'admin';
+    }
+
+    public function isTrabajador(): bool
+    {
+        return $this->rol === 'trabajador';
+    }
+
+    public function isCliente(): bool
+    {
+        return $this->rol === 'cliente';
     }
 }

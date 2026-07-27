@@ -41,10 +41,6 @@
             </button>
         </form>
 
-        <div class="mt-6 text-xs text-gray-400 border-t pt-4">
-            <p>Demo admin: admin@automaster.com / password123</p>
-            <p>Demo trabajador: trabajador@automaster.com / password123</p>
-        </div>
     </div>
 </body>
 </html>

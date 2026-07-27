@@ -39,8 +39,8 @@ async function iniciarMapa() {
     });
 }
 iniciarMapa();
-</script>
 
+// --- MOVIDO DENTRO DEL SCRIPT ---
 function limpiarMarcadores() {
     marcadores.forEach(m => m.setMap(null));
     marcadores = [];
@@ -96,5 +96,5 @@ async function buscarTaller() {
         estado.textContent = 'Ocurrió un error al buscar. Intenta de nuevo.';
     }
 }
-</script>
+</script> {{-- El script debe cerrar AQUÍ --}}
 @endsection

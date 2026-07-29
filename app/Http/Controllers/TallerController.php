@@ -12,11 +12,7 @@ class TallerController extends Controller
         return view('talleres.index');
     }
 
-    /**
-     * ENDPOINT: GET /talleres/buscar?nombre=xxx
-     * Devuelve en JSON los talleres registrados que coinciden con el nombre buscado,
-     * para pintarlos como marcadores en el mapa de Google Maps.
-     */
+
     public function buscar(Request $request)
     {
         $request->validate(['nombre' => ['nullable', 'string', 'max:255']]);

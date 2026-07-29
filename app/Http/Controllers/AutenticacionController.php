@@ -21,7 +21,7 @@ class AutenticacionController extends Controller
 
         $credenciales = [
             'correo' => $request->correo,
-            'password' => $request->contrasena, // "password" es la clave que espera internamente Auth::attempt
+            'password' => $request->contrasena, 
         ];
 
         if (!Auth::attempt($credenciales, $request->boolean('recordar'))) {

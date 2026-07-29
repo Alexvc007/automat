@@ -17,10 +17,14 @@ use App\Http\Controllers\TallerController;
 use App\Http\Controllers\TrabajadorController;
 use App\Http\Controllers\VehiculoController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InicioController;
 
+// Ruta principal - Ahora muestra la página de inicio
+Route::get('/', [InicioController::class, 'index'])->name('inicio');
+/*
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('panel') : redirect('/login');
-});
+});*/
 
 // Autenticación
 Route::get('/login', [AutenticacionController::class, 'mostrarLogin'])->name('login')->middleware('guest');

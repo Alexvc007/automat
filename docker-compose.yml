@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: automast-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - automast-net
+
+  webserver:
+    image: nginx:alpine
+    container_name: automast-webserver
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - automast-net
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: automast-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: automast_db
+      MYSQL_ROOT_PASSWORD: secretpassword
+      MYSQL_PASSWORD: secretpassword
+      MYSQL_USER: automast_user
+    volumes:
+      - automast_dbdata:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - automast-net
+
+networks:
+  automast-net:
+    driver: bridge
+
+volumes:
+  automast_dbdata:
+    driver: local

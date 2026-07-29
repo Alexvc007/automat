@@ -8,14 +8,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerificarRol
 {
-    /**
-     * Uso en rutas: ->middleware('rol:admin') o ->middleware('rol:admin,trabajador')
-     */
-    public function handle(Request $request, Closure $next, string $roles): Response
-    {
-        $permitidos = explode(',', $roles);
 
-        if (!$request->user() || !in_array($request->user()->rol, $permitidos)) {
+    public function handle(Request $request, Closure $next, string ...$roles): Response
+    {
+
+        if (!$request->user() || !in_array($request->user()->rol, $roles)) {
             abort(403, 'No tienes permiso para acceder a este módulo.');
         }
 

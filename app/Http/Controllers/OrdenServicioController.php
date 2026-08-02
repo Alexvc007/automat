@@ -51,26 +51,33 @@ class OrdenServicioController extends Controller
         return view('ordenes_servicio.create', compact('vehiculos', 'trabajadores', 'catalogo', 'inventario', 'vehiculoSeleccionadoId'));
     }
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'vehiculo_id' => ['required', 'exists:vehiculos,id'],
-            'trabajador_id' => ['nullable', 'exists:trabajadores,id'],
-            'fecha_ingreso' => ['required', 'date'],
-            'fecha_entrega_estimada' => ['nullable', 'date'],
-            'descripcion' => ['nullable', 'string'],
-            'servicios' => ['nullable', 'array'],
-            'servicios.*.descripcion' => ['required_with:servicios', 'string'],
-            'servicios.*.cantidad' => ['required_with:servicios', 'integer', 'min:1'],
-            'servicios.*.precio' => ['required_with:servicios', 'numeric', 'min:0'],
-            'repuestos' => ['nullable', 'array'],
-            'repuestos.*.item_inventario_id' => ['required_with:repuestos', 'exists:items_inventario,id'],
-            'repuestos.*.cantidad' => ['required_with:repuestos', 'integer', 'min:1'],
-            'pago_inicial' => ['nullable', 'numeric', 'min:0'],
-            'metodo_pago' => ['nullable', 'in:efectivo,qr,transferencia,tarjeta'],
-        ]);
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'vehiculo_id' => ['required', 'exists:vehiculos,id'],
+        'trabajador_id' => ['nullable', 'exists:trabajadores,id'],
+        'fecha_ingreso' => ['required', 'date'],
+        'fecha_entrega_estimada' => [
+            'nullable',
+            'date',
+            'after_or_equal:fecha_ingreso',
+        ],
+        'descripcion' => ['nullable', 'string'],
+        'servicios' => ['nullable', 'array'],
+        'servicios.*.descripcion' => ['required_with:servicios', 'string'],
+        'servicios.*.cantidad' => ['required_with:servicios', 'integer', 'min:1'],
+        'servicios.*.precio' => ['required_with:servicios', 'numeric', 'min:0'],
+        'repuestos' => ['nullable', 'array'],
+        'repuestos.*.item_inventario_id' => ['required_with:repuestos', 'exists:items_inventario,id'],
+        'repuestos.*.cantidad' => ['required_with:repuestos', 'integer', 'min:1'],
+        'pago_inicial' => ['nullable', 'numeric', 'min:0'],
+        'metodo_pago' => ['nullable', 'in:efectivo,qr,transferencia,tarjeta'],
+    ]);
+
+    try {
 
         $orden = DB::transaction(function () use ($data, $request) {
+
             $orden = OrdenServicio::create([
                 'numero_orden' => 'OS-' . strtoupper(uniqid()),
                 'vehiculo_id' => $data['vehiculo_id'],
@@ -92,38 +99,63 @@ class OrdenServicioController extends Controller
             }
 
             foreach ($data['repuestos'] ?? [] as $repuesto) {
+
                 $item = ItemInventario::lockForUpdate()->findOrFail($repuesto['item_inventario_id']);
+
                 if ($item->stock < $repuesto['cantidad']) {
-                    throw new \Exception("Stock insuficiente para {$item->nombre} (disponible: {$item->stock}).");
+                    throw new \Exception(
+                        "Stock insuficiente para {$item->nombre}. Disponible: {$item->stock}."
+                    );
                 }
+
                 $orden->repuestos()->create([
                     'item_inventario_id' => $item->id,
                     'cantidad' => $repuesto['cantidad'],
                     'precio_unitario' => $item->precio_unitario,
                 ]);
+
                 $item->decrement('stock', $repuesto['cantidad']);
             }
 
             $orden->recalcularTotales();
 
             if ($request->filled('pago_inicial') && $request->pago_inicial > 0) {
+
                 $orden->pagos()->create([
                     'monto' => $request->pago_inicial,
                     'fecha_pago' => now(),
                     'metodo' => $request->metodo_pago ?? 'efectivo',
                     'registrado_por' => auth()->id(),
                 ]);
+
                 $orden->increment('monto_pagado', $request->pago_inicial);
+
                 $orden->recalcularTotales();
             }
 
             return $orden;
         });
 
-        Bitacora::registrar('crear', 'OrdenServicio', $orden->id, "Orden {$orden->numero_orden} creada");
+        Bitacora::registrar(
+            'crear',
+            'OrdenServicio',
+            $orden->id,
+            "Orden {$orden->numero_orden} creada"
+        );
 
-        return redirect()->route('ordenes_servicio.show', $orden)->with('success', 'Orden de servicio creada correctamente.');
+        return redirect()
+            ->route('ordenes_servicio.show', $orden)
+            ->with('success', 'Orden de servicio creada correctamente.');
+
+    } catch (\Exception $e) {
+
+        return back()
+            ->withInput()
+            ->withErrors([
+                'stock' => $e->getMessage(),
+            ]);
     }
+}
 
     public function show(OrdenServicio $ordenServicio)
     {

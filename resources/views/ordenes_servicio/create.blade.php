@@ -96,6 +96,18 @@
 </form>
 
 <script>
+
+const ingreso = document.querySelector('input[name="fecha_ingreso"]');
+const entrega = document.querySelector('input[name="fecha_entrega_estimada"]');
+
+function actualizarMinEntrega() {
+    entrega.min = ingreso.value;
+}
+
+ingreso.addEventListener('change', actualizarMinEntrega);
+actualizarMinEntrega();
+
+
 const itemsInventario = @json($inventario);
 let indiceServicio = 0;
 let indiceRepuesto = 0;
